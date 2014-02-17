@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JSLint Tests: CSS::RGBA</title>
+
+        <link rel="stylesheet" href="./lib/qunit.css" type="text/css">
+
+        <script src="../fulljslint.js" type="text/javascript"></script>
+        <script src="./lib/qunit.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            /**
+             *  Helper functions
+             */
+            function generateCSSOneRule( selector, attribute ) {
+                return  "@charset 'UTF-8';\n"       +
+                        selector + " {\n"           +
+                        "    " + attribute + "\n"   +
+                        "}";
+            }
+            function testCSSOneRule( selector, attribute, options ) {
+                JSLINT( generateCSSOneRule( selector, attribute ), options );
+                return JSLINT.errors;
+            }
+            /**
+             *  Test Suite
+             */
+            module( "RGBa" );
+            test(
+                "Basic hex-value regression tests.",
+                function () {
+                    deepEqual( testCSSOneRule( 'body', 'background: #ABC;', { css: true } ), [], "`#RGB` shorthand is accepted with `css` set" );
+                    deepEqual( testCSSOneRule( 'body', 'background: #ABC;', { css: false } ), [], "`#RGB` shorthand is accepted with `css` not set" );
+                    deepEqual( testCSSOneRule( 'body', 'background: #AABBCC;', { css: true } ), [], "`#RRGGBB` longhand is accepted with `css` set" );
+                    deepEqual( testCSSOneRule( 'body', 'background: #AABBCC;', { css: false } ), [], "`#RRGGBB` longhand is accepted with `css` not set" );
+
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #A;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #AB;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCD;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDE;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDEFG;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDEFGH;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDEFGHI;', { css: true } ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #A;' ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #AB;' ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCD;' ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDE;' ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDEFG;' ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDEFGH;' ), [] );
+                    notDeepEqual( testCSSOneRule( 'body', 'background: #ABCDEFGHI;' ), [] );
+                }
+            );
+            test(
+                "Internet Explorer's filter syntax supports alpha via additional hex values. " +
+                "See: http://msdn.microsoft.com/en-us/library/ms532997(VS.85).aspx",
+                function () {
+                    deepEqual(
+                        testCSSOneRule(
+                            'body',
+                            'filter:progid:DXImageTransform.Microsoft.Gradient(StartColorStr=#FFFFFF50,EndColorStr=#FFFFFF50);',
+                            { css: true }
+                        ),
+                        [],
+                        "IE's filter syntax should be accepted when `css` is set."
+                    );
+
+                    notDeepEqual(
+                        testCSSOneRule(
+                            'body',
+                            'filter:progid:DXImageTransform.Microsoft.Gradient(StartColorStr=#FFFFFF50,EndColorStr=#FFFFFF50);'
+                        ),
+                        [],
+                        "IE's filter syntax should be rejected when `css` is not set."
+                    );
+                }
+            );
+
+            module( "CSS3 double-colon syntax for pseudo-eleents" );
+            test(
+                "In CSS3, `::` is used to designate pseudo-elements, and `:` for pseudo-classes.",
+                function () {
+                    deepEqual( testCSSOneRule( 'p::first-line', 'text-transform: uppercase;' ), [], "`p::first-line` should parse correctly." );
+                    notDeepEqual( testCSSOneRule( 'p:::first-line', 'text-transform: uppercase;' ), [], "`p:::first-line` is still an error." );
+                }
+            );
+            
+            module( "Vendor-prefixed pseudoclasses/elements" );
+            test(
+                "http://stopdesign.com/archive/2009/02/04/recreating-the-button.html#comment-4379",
+                function () {
+                    deepEqual(
+                        testCSSOneRule( 'input::-moz-focus-inner', 'padding: 0px;', { css: true } ),
+                        [],
+                        "Vendor prefixed pseudo-elements should be accepted when `css` is set."
+                    );
+                    notDeepEqual(
+                        testCSSOneRule( 'input::-moz-focus-inner', 'padding: 0px;' ),
+                        [],
+                        "Vendor prefixed pseudo-elements should produce warnings when `css` is not set."
+                    );
+                }
+            );
+            
+            module( "Font shorthand." );
+            test(
+                "Basic font size + line-height should work correctly.",
+                function () {
+                    deepEqual(
+                        testCSSOneRule( 'body', 'font: 12px/14px sans-serif;', { css: true } ),
+                        [],
+                        "Really, really basic rule, direct out of the spec: http://www.w3.org/TR/css3-fonts/#font"
+                    );
+                    deepEqual(
+                        testCSSOneRule( 'body', 'font: 12px/14 sans-serif;', { css: true } ),
+                        [],
+                        "Line height can be unitless."
+                    );
+                    deepEqual(
+                        testCSSOneRule( 'body', 'font: 12px sans-serif;', { css: true } ),
+                        [],
+                        "Line height can be inherited."
+                    );
+                  }
+                );
+            module( "Background URLs" );
+            test(
+                "URL shouldn't cause problems in `background` shorthand.",
+                function () {
+                    deepEqual(
+                        testCSSOneRule( 'div', 'background: url(/path/to/image.jpg);', { css: true } ),
+                        [],
+                        "Basic background."
+                    );
+                    deepEqual(
+                        testCSSOneRule( 'div', 'background: url(/path/to/image.jpg) no-repeat top left;', { css: true } ),
+                        [],
+                        "Basic background with details."
+                    );
+                }
+            );
+
+        </script>
+    </head>
+    <body>
+        <h1 id="qunit-header">JSLint Tests</h1>
+        <h2 id="qunit-banner"></h2>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+    </body>
+</html>

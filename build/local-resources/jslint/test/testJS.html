@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JSLint Tests: JS</title>
+
+        <link rel="stylesheet" href="./lib/qunit.css" type="text/css">
+
+        <script src="../fulljslint.js" type="text/javascript"></script>
+        <script src="./lib/qunit.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            /**
+             *  Helper Functions
+             */
+            function testJS( code, options ) {
+                JSLINT( code, options );
+                return JSLINT.errors;
+            }
+            /**
+             *  Test Suite
+             */
+            module( "Arguments" );
+            test(
+                "Adding option for `arguments.callee`, which Crockford removed in " +
+                "http://github.com/mikewest/jslint/commit/7a145057d9038c8dd2ebacb07665381c51c4895a",
+                function () {
+                    notDeepEqual( testJS( "function test() { var x = arguments.callee; }", { args: true} ), [], "`arguments.callee` throws warning with `args` set." );
+                    deepEqual( testJS( "function test() { var x = arguments.callee; }", { args: false } ), [], "`arguments.callee` doesn't throw warning without `args` set." );
+                }
+            );
+            test(
+                "Adding option for `arguments.caller`, which Crockford removed in " +
+                "http://github.com/mikewest/jslint/commit/7a145057d9038c8dd2ebacb07665381c51c4895a",
+                function () {
+                    notDeepEqual( testJS( "function test() { var x = arguments.caller; }", { args: true} ), [], "`arguments.callee` throws warning with `args` set." );
+                    deepEqual( testJS( "function test() { var x = arguments.caller; }", { args: false } ), [], "`arguments.callee` doesn't throw warning without `args` set." );
+                }
+            );
+        </script>
+    </head>
+    <body>
+        <h1 id="qunit-header">JSLint Tests</h1>
+        <h2 id="qunit-banner"></h2>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+    </body>
+</html>
